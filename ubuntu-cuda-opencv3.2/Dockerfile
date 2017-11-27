@@ -5,13 +5,18 @@ LABEL com.example.version="0.0.1-beta"
 LABEL author="ffarhour"
 LABEL com.example.release-date="2017-11-26"
 
+# install cuda libraries
+RUN apt-get update \
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y nvidia-cuda-toolkit \ 
+	&& rm -rf /var/lib/apt/lists/*
+
 # install common programs and libraries + cuda
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+RUN apt-get update \
     	&& apt-get install -y python3 python3-dev python3-setuptools \
     	nano vim wget curl git \
     	software-properties-common python-software-properties \
+	sudo \
     	&& easy_install3 pip \ 
-	&& DEBIAN_FRONTEND=noninteractive apt-get install -y nvidia-cuda-toolkit \
 	&& rm -rf /var/lib/apt/lists/*
 
 # install opencv
@@ -47,21 +52,31 @@ RUN git clone https://github.com/Itseez/opencv.git \
 	&& cd / \
 	&& rm -rf /opencv \
 	&& rm -rf /opencv_contrib
-	
 
-#WORKDIR /opencv
-#RUN git checkout 3.2.0
-#WORKDIR /
-#RUN git clone https://github.com/Itseez/opencv_contrib.git
-#WORKDIR /opencv_contrib
-#RUN git checkout 3.2.0
-#WORKDIR /opencv
-#RUN mkdir build
-#WORKDIR /opencv/build
-#RUN cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_OPENGL=ON -D WITH_CUDA=ON -D BUILD_EXAMPLES=OFF -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_SHARED_LIBS=ON -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules ../ 
-#RUN make -j4
-#RUN make install
-#RUN ldconfig
-#WORKDIR /
-#RUN rm -rf /opencv
-#RUN rm -rf /opencv_contrib
+# enable gui
+# Replace 1000 with your user / group id
+RUN export uid=1000 gid=1000 && \
+    mkdir -p /home/developer && \
+    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
+    echo "developer:x:${uid}:" >> /etc/group && \
+    echo "developer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/developer && \
+    chmod 0440 /etc/sudoers.d/developer && \
+    chown ${uid}:${gid} -R /home/developer
+
+
+# install firefox	
+#RUN apt-get update && apt-get install -y firefox \
+#	&& rm -rf /var/lib/apt/lists/*
+
+# install thunar
+RUN apt-get update && apt-get install -y thunar \
+	&& rm -rf /var/lib/apt/lists/*
+
+USER developer
+ENV HOME /home/developer
+
+# run firefox
+#CMD /usr/bin/firefox
+
+# run thunar  
+CMD /usr/bin/thunar

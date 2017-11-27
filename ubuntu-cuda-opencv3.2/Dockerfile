@@ -5,15 +5,14 @@ LABEL com.example.version="0.0.1-beta"
 LABEL author="ffarhour"
 LABEL com.example.release-date="2017-11-26"
 
-# install common programs and libraries
-RUN apt-get update \
-    && apt-get install -y python3 python3-dev python3-setuptools \
-    nano vim wget curl git \
-    software-properties-common python-software-properties \
-    && easy_install3 pip
-
-# install cuda
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nvidia-cuda-toolkit
+# install common programs and libraries + cuda
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    	&& apt-get install -y python3 python3-dev python3-setuptools \
+    	nano vim wget curl git \
+    	software-properties-common python-software-properties \
+    	&& easy_install3 pip \ 
+	&& DEBIAN_FRONTEND=noninteractive apt-get install -y nvidia-cuda-toolkit \
+	&& rm -rf /var/lib/apt/lists/*
 
 # install opencv
 RUN apt-get update \
@@ -32,20 +31,37 @@ RUN apt-get update \
 #RUN pip install numpy
 
 WORKDIR /
-RUN git clone https://github.com/Itseez/opencv.git
-WORKDIR /opencv
-RUN git checkout 3.2.0
-WORKDIR /
-RUN git clone https://github.com/Itseez/opencv_contrib.git
-WORKDIR /opencv_contrib
-RUN git checkout 3.2.0
-WORKDIR /opencv
-RUN mkdir build
-WORKDIR /opencv/build
-RUN cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_OPENGL=ON -D WITH_CUDA=ON -D BUILD_EXAMPLES=OFF -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_SHARED_LIBS=ON -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules ../ 
-RUN make -j4
-RUN make install
-RUN ldconfig
-WORKDIR ~
-RUN rm -rf /opencv
-RUN rm -rf /opencv_contrib
+RUN git clone https://github.com/Itseez/opencv.git \
+	&& cd /opencv \
+	&& git checkout 3.2.0 \
+	&& cd / \
+	&& git clone https://github.com/Itseez/opencv_contrib.git \
+	&& cd /opencv_contrib \
+	&& git checkout 3.2.0 \
+	&& mkdir /opencv/build \
+	&& cd /opencv/build \
+	&& cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_OPENGL=ON -D WITH_CUDA=ON -D BUILD_EXAMPLES=OFF -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_SHARED_LIBS=ON -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules ../ \
+	&& make -j4 \
+	&& make install \
+	&& ldconfig \
+	&& cd / \
+	&& rm -rf /opencv \
+	&& rm -rf /opencv_contrib
+	
+
+#WORKDIR /opencv
+#RUN git checkout 3.2.0
+#WORKDIR /
+#RUN git clone https://github.com/Itseez/opencv_contrib.git
+#WORKDIR /opencv_contrib
+#RUN git checkout 3.2.0
+#WORKDIR /opencv
+#RUN mkdir build
+#WORKDIR /opencv/build
+#RUN cmake -D CMAKE_BUILD_TYPE=RELEASE -D WITH_OPENGL=ON -D WITH_CUDA=ON -D BUILD_EXAMPLES=OFF -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_SHARED_LIBS=ON -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules ../ 
+#RUN make -j4
+#RUN make install
+#RUN ldconfig
+#WORKDIR /
+#RUN rm -rf /opencv
+#RUN rm -rf /opencv_contrib
